@@ -9,8 +9,10 @@ st.set_page_config(page_title="老闆儀表板", page_icon="📊", layout="wide"
 st.title("📊 老闆儀表板")
 
 DEFAULT_CSV = Path(__file__).with_name("sales_2026.csv")
+has_default_csv = DEFAULT_CSV.is_file()
 st.sidebar.header("篩選條件")
-uploaded = st.sidebar.file_uploader("上傳營收 CSV（選填）", type=["csv"])
+upload_label = "上傳營收 CSV（選填）" if has_default_csv else "上傳營收 CSV"
+uploaded = st.sidebar.file_uploader(upload_label, type=["csv"])
 
 
 def read_sales(source):
@@ -31,6 +33,10 @@ def read_sales(source):
     data["profit"] = data["revenue"] - data["cost"]
     return data.sort_values("date")
 
+
+if uploaded is None and not has_default_csv:
+    st.info("請從側邊欄上傳營收 CSV，即可查看儀表板。")
+    st.stop()
 
 try:
     df = read_sales(uploaded if uploaded is not None else DEFAULT_CSV)
