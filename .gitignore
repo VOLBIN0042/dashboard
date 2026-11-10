@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# 機密資料
+*.xlsx
+*.csv
+data/
+.streamlit/secrets.toml
+
+# 編輯器
+.vscode/
+.idea/
+.DS_Store
