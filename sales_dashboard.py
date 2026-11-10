@@ -1,9 +1,39 @@
 """執行：streamlit run sales_dashboard.py"""
+from hmac import compare_digest
 from pathlib import Path
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+
+# 同一個 Streamlit 工作階段登入後，互動造成的重新執行會略過驗證。
+if not st.session_state.get("authenticated", False):
+    # 用表單收集密碼，提交後清空輸入框。
+    with st.form("login", clear_on_submit=True):
+        entered_password = st.text_input("請輸入密碼", type="password")
+        submitted = st.form_submit_button("登入")
+
+    if submitted:
+        # 從 Secrets 讀取密碼。設定缺漏時停止，避免開放儀表板。
+        try:
+            admin_password = st.secrets["passwords"]["admin"]
+        except (FileNotFoundError, KeyError, TypeError):
+            st.error("登入設定不完整，請聯絡管理員。")
+            st.stop()
+
+        if not isinstance(admin_password, str) or not admin_password:
+            st.error("登入設定不完整，請聯絡管理員。")
+            st.stop()
+
+        # 比對 UTF-8 位元組以支援中文密碼，只記住登入狀態。
+        if compare_digest(entered_password.encode("utf-8"), admin_password.encode("utf-8")):
+            st.session_state["authenticated"] = True
+            st.rerun()
+
+        st.error("密碼錯誤，請再試一次。")
+
+    # 未登入時在這裡停止，不讀取營收資料或顯示儀表板。
+    st.stop()
 
 st.set_page_config(page_title="老闆儀表板", page_icon="📊", layout="wide")
 st.title("📊 老闆儀表板")
